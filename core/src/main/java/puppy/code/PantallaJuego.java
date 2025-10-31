@@ -25,9 +25,27 @@ public class PantallaJuego implements Screen {
     private int velYEnemigos;
     private int cantEnemigos;
 
-    private NaveDefault nave;
+    private NaveBase nave;
     private ArrayList<EnemigoBase> enemigos = new ArrayList<>();
     private ArrayList<Bullet> balas = new ArrayList<>();
+
+    // Texturas y sonidos compartidos (incluyendo versiones débiles)
+    private Texture texturaNaveDefault;
+    private Texture texturaNaveDefaultDebil;
+    private Texture texturaBalaDefault;
+
+    private Texture texturaNaveENormal;
+    private Texture texturaNaveENormalDebil;
+    private Texture texturaBalaENormal;
+
+    private Sound sonidoHerido;
+    private Sound sonidoBala;
+
+    // Texturas de enemigos (si quieres mantenerlas centralizadas)
+    private Texture texEnemigoGrande;
+    private Texture texEnemigoGrandeDebil;
+    private Texture texEnemigoNormal;
+    private Texture texEnemigoNormalDebil;
 
     public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,
                          int velXEnemigos, int velYEnemigos, int cantEnemigos) {
@@ -49,33 +67,52 @@ public class PantallaJuego implements Screen {
         gameMusic.setVolume(0.3f);
         gameMusic.play();
 
+        // Cargar texturas y sonidos una vez (incluyendo versiones débiles)
+        texturaNaveDefault = new Texture(Gdx.files.internal("NaveDefault.png"));
+        texturaNaveDefaultDebil = new Texture(Gdx.files.internal("NaveDefaultDebil.png"));
+        texturaBalaDefault = new Texture(Gdx.files.internal("BulletNormal.png"));
+
+        texturaNaveENormal = new Texture(Gdx.files.internal("NaveENormal.png"));
+        texturaNaveENormalDebil = new Texture(Gdx.files.internal("NaveENormalDebil.png"));
+        texturaBalaENormal = new Texture(Gdx.files.internal("BulletEnemigoNormal.png"));
+
+        sonidoHerido = Gdx.audio.newSound(Gdx.files.internal("hurt.ogg"));
+        sonidoBala = Gdx.audio.newSound(Gdx.files.internal("pop-sound.mp3"));
+
+        // Cargar texturas de enemigos
+        texEnemigoGrande = new Texture(Gdx.files.internal("enemigoGrande.png"));
+        texEnemigoGrandeDebil = new Texture(Gdx.files.internal("enemigoGrandeDebil.png"));
+        texEnemigoNormal = new Texture(Gdx.files.internal("enemigoNormal.png"));
+        texEnemigoNormalDebil = new Texture(Gdx.files.internal("enemigoNormalDebil.png"));
+
+        // Crear nave inicial (NaveDefault recibe su textura normal y su versión débil)
         nave = new NaveDefault(
             Gdx.graphics.getWidth() / 2f - 50, 30,
-            new Texture(Gdx.files.internal("MainShip3.png")),
-            Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")),
-            new Texture(Gdx.files.internal("Rocket2.png")),
-            Gdx.audio.newSound(Gdx.files.internal("pop-sound.mp3"))
+            texturaNaveDefault, texturaNaveDefaultDebil,
+            sonidoHerido, texturaBalaDefault, sonidoBala
         );
         nave.setVidas(vidas);
+        nave.setJuego(this);
 
-        // Crear enemigos
+        // Crear enemigos usando las texturas cargadas
         Random r = new Random();
         for (int i = 0; i < cantEnemigos; i++) {
-            EnemigoGrande enemigo = new EnemigoGrande(
-                new Texture(Gdx.files.internal("enemigoGrande.png")),
-                new Texture(Gdx.files.internal("enemigoGrandeDebil.png")),
+            enemigos.add(new EnemigoGrande(
+                texEnemigoGrande, texEnemigoGrandeDebil,
                 r.nextInt(Gdx.graphics.getWidth()),
                 50 + r.nextInt(Gdx.graphics.getHeight() - 50),
                 60 + r.nextInt(10),
                 velXEnemigos + r.nextInt(1),
                 velYEnemigos + r.nextInt(1)
-            );
-            enemigos.add(enemigo);
-
-            // Otros tipos posibles:
-            // enemigos.add(new EnemigoMediano(...));
-            // enemigos.add(new EnemigoPequeno(...));
-            // enemigos.add(new EnemigoExplosivo(...));
+            ));
+            enemigos.add(new EnemigoNormal(
+                texEnemigoNormal, texEnemigoNormalDebil,
+                r.nextInt(Gdx.graphics.getWidth()),
+                50 + r.nextInt(Gdx.graphics.getHeight() - 50),
+                40 + r.nextInt(10),
+                velXEnemigos + r.nextInt(1),
+                velYEnemigos + r.nextInt(1)
+            ));
         }
     }
 
@@ -94,42 +131,40 @@ public class PantallaJuego implements Screen {
 
         dibujaEncabezado();
 
-        if (!nave.estaHerido()) {
-            // Actualizar balas y colisión con enemigos
-            for (int i = 0; i < balas.size(); i++) {
-                Bullet b = balas.get(i);
-                b.update();
-                for (int j = 0; j < enemigos.size(); j++) {
-                    EnemigoBase e = enemigos.get(j);
-                    if (b.checkCollision(e)) {
-                        e.recibirDano(1);
-                        if (e.estaDestruido()) {
-                            explosionSound.play();
-                            enemigos.remove(j);
-                            j--;
-                            score += 10;
-                        }
-                        b.setDestroyed(true);
+        // Actualizar y procesar balas
+        for (int i = 0; i < balas.size(); i++) {
+            Bullet b = balas.get(i);
+            b.update();
+            for (int j = 0; j < enemigos.size(); j++) {
+                EnemigoBase e = enemigos.get(j);
+                if (b.checkCollision(e)) {
+                    e.recibirDano(1);
+                    if (e.estaDestruido()) {
+                        explosionSound.play();
+                        enemigos.remove(j);
+                        j--;
+                        score += 10;
                     }
-                }
-                if (b.isDestroyed()) {
-                    balas.remove(i);
-                    i--;
+                    b.setDestroyed(true);
                 }
             }
-
-            // Actualizar movimiento de enemigos
-            for (EnemigoBase e : enemigos) {
-                e.update();
+            if (b.isDestroyed()) {
+                balas.remove(i);
+                i--;
             }
+        }
 
-            // Colisiones entre enemigos
-            for (int i = 0; i < enemigos.size(); i++) {
-                EnemigoBase e1 = enemigos.get(i);
-                for (int j = i + 1; j < enemigos.size(); j++) {
-                    EnemigoBase e2 = enemigos.get(j);
-                    e1.checkCollision(e2);
-                }
+        // Actualizar movimiento de enemigos
+        for (EnemigoBase e : enemigos) {
+            e.update();
+        }
+
+        // Colisiones entre enemigos
+        for (int i = 0; i < enemigos.size(); i++) {
+            EnemigoBase e1 = enemigos.get(i);
+            for (int j = i + 1; j < enemigos.size(); j++) {
+                EnemigoBase e2 = enemigos.get(j);
+                e1.checkCollision(e2);
             }
         }
 
@@ -138,18 +173,47 @@ public class PantallaJuego implements Screen {
             b.draw(batch);
         }
 
-        // Dibujar nave
+        // Dibujar y actualizar la nave
         nave.draw(batch, this);
 
-        // Dibujar enemigos y colisión con nave
+        // Dibujar enemigos y gestionar interacción con la nave
         for (int i = 0; i < enemigos.size(); i++) {
             EnemigoBase e = enemigos.get(i);
-            e.draw(batch);
+
+            // Actualizar estado visual antes de dibujar (para que la textura débil se aplique)
             e.update();
             e.actualizarSprite();
-            if (nave.checkCollision(e)) {
-                enemigos.remove(i);
-                i--;
+
+            // Dibujar enemigo
+            e.draw(batch);
+
+            // Validar vida y porcentaje
+            int vidaActual = e.getVidas();
+            int vidaMaxima = Math.max(1, e.getVidaMaxima());
+            float porcentajeEnemigo = (float) vidaActual / vidaMaxima;
+
+            // Intentar fusión solo si:
+            // - el enemigo está vivo
+            // - está debilitado (<=25%)
+            // - hay overlap físico entre nave y enemigo
+            if (vidaActual > 0
+                && porcentajeEnemigo <= 0.25f
+                && nave.getArea().overlaps(e.getArea())) {
+
+                if (nave.conectar(e)) {
+                    // se transformó correctamente: eliminar enemigo y continuar
+                    enemigos.remove(i);
+                    i--;
+                    continue;
+                }
+            }
+
+            // Si no se fusionó, procesar colisión normal (solo si hay overlap)
+            if (nave.getArea().overlaps(e.getArea())) {
+                if (nave.checkCollision(e)) {
+                    enemigos.remove(i);
+                    i--;
+                }
             }
         }
 
@@ -163,9 +227,9 @@ public class PantallaJuego implements Screen {
         }
 
         // Nivel completado
-        if (enemigos.size() == 0) {
+        if (enemigos.isEmpty()) {
             game.setScreen(new PantallaJuego(game, ronda + 1, nave.getVidas(), score,
-                velXEnemigos + 3, velYEnemigos + 3, cantEnemigos + 10));
+                velXEnemigos + 3, velYEnemigos + 3, cantEnemigos + 6));
             dispose();
         }
 
@@ -176,26 +240,56 @@ public class PantallaJuego implements Screen {
         return balas.add(bb);
     }
 
-    @Override
-    public void show() {
-        gameMusic.play();
+    public void transformarEn(NaveBase nuevaNave) {
+        // conservar posición y vidas si es necesario ya se asignan en el constructor de la nueva nave
+        this.nave = nuevaNave;
+        this.nave.setJuego(this);
     }
 
-    @Override
-    public void resize(int width, int height) {}
+    // Getters para que NaveBase / subclases tomen texturas/sonidos sin recargar archivos
+    public Texture getTexturaNaveENormal() {
+        return texturaNaveENormal;
+    }
 
-    @Override
-    public void pause() {}
+    public Texture getTexturaNaveENormalDebil() {
+        return texturaNaveENormalDebil;
+    }
 
-    @Override
-    public void resume() {}
+    public Texture getTexturaBalaENormal() {
+        return texturaBalaENormal;
+    }
 
-    @Override
-    public void hide() {}
+    public Sound getSonidoHerido() {
+        return sonidoHerido;
+    }
 
-    @Override
-    public void dispose() {
-        explosionSound.dispose();
-        gameMusic.dispose();
+    public Sound getSonidoBala() {
+        return sonidoBala;
+    }
+
+    @Override public void show() { gameMusic.play(); }
+    @Override public void resize(int width, int height) {}
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void hide() {}
+    @Override public void dispose() {
+        // disposar texturas y sonidos que cargaste aquí
+        if (texturaNaveDefault != null) texturaNaveDefault.dispose();
+        if (texturaNaveDefaultDebil != null) texturaNaveDefaultDebil.dispose();
+        if (texturaBalaDefault != null) texturaBalaDefault.dispose();
+
+        if (texturaNaveENormal != null) texturaNaveENormal.dispose();
+        if (texturaNaveENormalDebil != null) texturaNaveENormalDebil.dispose();
+        if (texturaBalaENormal != null) texturaBalaENormal.dispose();
+
+        if (texEnemigoGrande != null) texEnemigoGrande.dispose();
+        if (texEnemigoGrandeDebil != null) texEnemigoGrandeDebil.dispose();
+        if (texEnemigoNormal != null) texEnemigoNormal.dispose();
+        if (texEnemigoNormalDebil != null) texEnemigoNormalDebil.dispose();
+
+        if (explosionSound != null) explosionSound.dispose();
+        if (sonidoHerido != null) sonidoHerido.dispose();
+        if (sonidoBala != null) sonidoBala.dispose();
+        if (gameMusic != null) gameMusic.dispose();
     }
 }
