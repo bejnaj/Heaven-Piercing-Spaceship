@@ -45,8 +45,8 @@ public class Bullet {
         spr.draw(batch);
     }
 
-    public boolean checkCollision(Ball2 b2) {
-        if (spr.getBoundingRectangle().overlaps(b2.getArea())) {
+    public boolean checkCollision(EnemigoBase enemigo) {
+        if (spr.getBoundingRectangle().overlaps(enemigo.getArea())) {
             this.destroyed = true;
             return true;
         }
@@ -67,4 +67,7 @@ public class Bullet {
     public float getY() { return spr.getY(); }
     public float getXSpeed() { return xSpeed; }
     public float getYSpeed() { return ySpeed; }
+    public void setDestroyed (boolean destroyed) {
+        this.destroyed = destroyed;
+    }
 }
