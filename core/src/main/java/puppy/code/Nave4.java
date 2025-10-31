@@ -29,7 +29,6 @@ public class Nave4 {
 
     private float shootCooldown = 0f;
     private final float shootCooldownMax = 0.25f;
-    private int shootingDir = -1; // -1 = ninguna, 0 = up, 1 = down, 2 = left, 3 = right
     private int lastFacingDir = 1; // dirección visual actual (por defecto DOWN)
 
     public Nave4(int x, int y, Texture txNave, Sound soundChoque, Texture txBala, Sound soundBala) {
@@ -109,68 +108,24 @@ public class Nave4 {
 
             spr.draw(batch);
 
-            // DISPARO (misma textura de bala, pero rotada según dirección)
-            boolean wPressed = Gdx.input.isKeyPressed(Input.Keys.W);
-            boolean sPressed = Gdx.input.isKeyPressed(Input.Keys.S);
-            boolean aPressed = Gdx.input.isKeyPressed(Input.Keys.A);
-            boolean dPressed = Gdx.input.isKeyPressed(Input.Keys.D);
+            // DISPARO: ahora con SPACE en la dirección que apunta la nave
+            if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && shootCooldown <= 0f) {
+                // obtener la rotación actual del sprite (0 = up, 90 = left, -90 = right, 180/-180 = down)
+                float rot = spr.getRotation();
+                // reconvertir a ángulo matemático desde +X: orig = rot + 90 (ver updateShipRotation)
+                float origDeg = rot + 90f;
+                double rad = Math.toRadians(origDeg);
+                float bulletSpeed = 400f; // velocidad de la bala
 
-            if (shootingDir == -1) {
-                if (Gdx.input.isKeyJustPressed(Input.Keys.W) && !sPressed && !aPressed && !dPressed) shootingDir = 0;
-                else if (Gdx.input.isKeyJustPressed(Input.Keys.S) && !wPressed && !aPressed && !dPressed) shootingDir = 1;
-                else if (Gdx.input.isKeyJustPressed(Input.Keys.A) && !wPressed && !sPressed && !dPressed) shootingDir = 2;
-                else if (Gdx.input.isKeyJustPressed(Input.Keys.D) && !wPressed && !sPressed && !aPressed) shootingDir = 3;
-            }
+                float vx = (float) Math.cos(rad) * bulletSpeed;
+                float vy = (float) Math.sin(rad) * bulletSpeed;
 
-            if (shootingDir != -1) {
-                boolean sigue = false;
-                switch (shootingDir) {
-                    case 0: sigue = wPressed; break;
-                    case 1: sigue = sPressed; break;
-                    case 2: sigue = aPressed; break;
-                    case 3: sigue = dPressed; break;
-                }
-                if (!sigue) shootingDir = -1;
-            }
+                // posicionar la bala en el centro de la nave (ajustar según tamaño de la textura)
+                float bx = spr.getX() + spr.getWidth() / 2 - 5;
+                float by = spr.getY() + spr.getHeight() / 2 - 5;
 
-            if (shootingDir != -1 && shootCooldown <= 0f) {
-                Bullet bala = null;
-                float bx = 0, by = 0, vx = 0, vy = 0, angleDeg = 0f;
-                switch (shootingDir) {
-                    case 0: // arriba
-                        bx = spr.getX() + spr.getWidth() / 2 - 5;
-                        by = spr.getY() + spr.getHeight() - 5;
-                        vx = 0; vy = 300;
-                        angleDeg = 0f;
-                        lastFacingDir = 0;
-                        break;
-                    case 1: // abajo
-                        bx = spr.getX() + spr.getWidth() / 2 - 5;
-                        by = spr.getY();
-                        vx = 0; vy = -300;
-                        angleDeg = 180f;
-                        lastFacingDir = 1;
-                        break;
-                    case 2: // izquierda
-                        bx = spr.getX();
-                        by = spr.getY() + spr.getHeight() / 2 - 5;
-                        vx = -300; vy = 0;
-                        angleDeg = 90f;
-                        lastFacingDir = 2;
-                        break;
-                    case 3: // derecha
-                        bx = spr.getX() + spr.getWidth();
-                        by = spr.getY() + spr.getHeight() / 2 - 5;
-                        vx = 300; vy = 0;
-                        angleDeg = -90f;
-                        lastFacingDir = 3;
-                        break;
-                }
-                bala = new Bullet(bx, by, vx, vy, txBala);
-                // si tu Bullet tiene setRotation / getSprite, rota la bala para que apunte
-                try {
-                    bala.setRotation(angleDeg); // si existe
-                } catch (Throwable ignored) { }
+                Bullet bala = new Bullet(bx, by, vx, vy, txBala);
+                try { bala.setRotation(rot); } catch (Throwable ignored) {}
                 juego.agregarBala(bala);
                 if (soundBala != null) soundBala.play();
                 shootCooldown = shootCooldownMax;
