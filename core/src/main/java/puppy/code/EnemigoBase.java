@@ -8,12 +8,16 @@ import com.badlogic.gdx.math.Rectangle;
 
 public abstract class EnemigoBase implements Atacable, Actualizable {
     protected int vidas;
+    protected int vidaMaxima;
     protected Sprite spr;
     protected int xSpeed;
     protected int ySpeed;
     protected boolean debil = false;
+
     public EnemigoBase(int vidas, Texture textura, int x, int y, int size, int xSpeed, int ySpeed) {
         this.vidas = vidas;
+        this.vidaMaxima = vidas;
+
         this.spr = new Sprite(textura);
         this.spr.setSize(size, size);
         this.spr.setOriginCenter();
@@ -76,10 +80,16 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
     @Override
     public abstract void actualizarSprite();
 
+    @Override
+    public boolean conectar(Atacable otro) {
+        // lógica por defecto
+        return false;
+    }
+
     // Getters y setters útiles
     public int getXSpeed() { return xSpeed; }
     public void setXSpeed(int xSpeed) { this.xSpeed = xSpeed; }
-
+    public int getVidaMaxima() { return vidaMaxima; }
     public int getYSpeed() { return ySpeed; }
     public void setYSpeed(int ySpeed) { this.ySpeed = ySpeed; }
 

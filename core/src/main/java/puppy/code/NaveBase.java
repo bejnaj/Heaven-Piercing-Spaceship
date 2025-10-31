@@ -7,15 +7,19 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 
-public abstract class NaveBase implements Conectable, Atacable, Actualizable {
+public abstract class NaveBase implements Atacable, Actualizable {
     protected int vidas;
     protected Sprite spr;
     protected Texture texturaNave;
+    protected Texture texturaNaveDebil;
     protected Texture texturaBala;
     protected Sound sonidoHerido;
     protected Sound sonidoBala;
+    protected PantallaJuego juego;
 
+    protected boolean transformada = false;
     protected boolean destruida = false;
     protected boolean herido = false;
     protected int tiempoHerido = 0;
@@ -30,11 +34,16 @@ public abstract class NaveBase implements Conectable, Atacable, Actualizable {
     protected float shootCooldown = 0f;
     protected float shootCooldownMax = 0.25f;
 
-    protected int lastFacingDir = 1; // 0=up, 1=down, 2=left, 3=right
+    protected int lastFacingDir = 1;
 
-    public NaveBase(int vidas, Texture texturaNave, Texture texturaBala, Sound sonidoHerido, Sound sonidoBala, float x, float y) {
+    public boolean estaTransformada() {
+        return transformada;
+    }
+
+    public NaveBase(int vidas, Texture texturaNave, Texture texturaNaveDebil, Texture texturaBala, Sound sonidoHerido, Sound sonidoBala, float x, float y) {
         this.vidas = vidas;
         this.texturaNave = texturaNave;
+        this.texturaNaveDebil = texturaNaveDebil;
         this.texturaBala = texturaBala;
         this.sonidoHerido = sonidoHerido;
         this.sonidoBala = sonidoBala;
@@ -43,6 +52,10 @@ public abstract class NaveBase implements Conectable, Atacable, Actualizable {
         spr.setSize(45, 45);
         spr.setOriginCenter();
         spr.setPosition(x, y);
+    }
+
+    public void setJuego(PantallaJuego juego) {
+        this.juego = juego;
     }
 
     public void setPosition(float x, float y) {
@@ -55,7 +68,6 @@ public abstract class NaveBase implements Conectable, Atacable, Actualizable {
         if (shootCooldown > 0f) shootCooldown -= delta;
 
         if (!herido) {
-            // Movimiento con teclado
             float ax = 0f, ay = 0f;
             if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) ax = -1f;
             if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) ax = 1f;
@@ -90,9 +102,11 @@ public abstract class NaveBase implements Conectable, Atacable, Actualizable {
             spr.setPosition(newX, newY);
             actualizarRotacion();
 
+            // Aplicar textura según vida antes de dibujar
+            aplicarTexturaSegunVida();
+
             spr.draw(batch);
 
-            // Disparo con SPACE
             if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && shootCooldown <= 0f) {
                 Bullet bala = disparar();
                 if (bala != null) {
@@ -103,6 +117,8 @@ public abstract class NaveBase implements Conectable, Atacable, Actualizable {
 
         } else {
             spr.setX(spr.getX() + MathUtils.random(-2, 2));
+            // Aplicar textura también cuando está herido
+            aplicarTexturaSegunVida();
             spr.draw(batch);
             spr.setX(spr.getX());
             tiempoHerido--;
@@ -135,12 +151,51 @@ public abstract class NaveBase implements Conectable, Atacable, Actualizable {
             }
         } else {
             switch (lastFacingDir) {
-                case 0: spr.setRotation(0f); break;
-                case 1: spr.setRotation(180f); break;
-                case 2: spr.setRotation(90f); break;
-                case 3: spr.setRotation(-90f); break;
+                case 0:
+                    spr.setRotation(0f);
+                    break;
+                case 1:
+                    spr.setRotation(180f);
+                    break;
+                case 2:
+                    spr.setRotation(90f);
+                    break;
+                case 3:
+                    spr.setRotation(-90f);
+                    break;
             }
         }
+    }
+    public Rectangle getArea() {
+        return spr.getBoundingRectangle();
+    }
+    /**
+     * Cambia la textura del sprite entre la normal y la débil según el porcentaje de vida.
+     * Por defecto se usa <=25% para la versión débil.
+     * Subclases pueden sobrescribir esta lógica si quieren otro umbral o efectos.
+     */
+    protected void aplicarTexturaSegunVida() {
+        if (texturaNaveDebil == null || texturaNave == null) return;
+
+        float porcentaje = (float) vidas / Math.max(1, getVidaMaximaEstimada());
+        if (porcentaje <= 0.25f) {
+            if (spr.getTexture() != texturaNaveDebil) {
+                spr.setRegion(texturaNaveDebil);
+            }
+        } else {
+            if (spr.getTexture() != texturaNave) {
+                spr.setRegion(texturaNave);
+            }
+        }
+    }
+
+    /**
+     * Método auxiliar para estimar vida máxima si no hay API explícita.
+     * Puedes sobrescribirlo en subclases para retornar el valor correcto (por ejemplo vidaMaxima).
+     */
+    protected int getVidaMaximaEstimada() {
+        // Por defecto asumimos 3 vidas si no se redefine en la subclase
+        return Math.max(vidas, 10);
     }
 
     public Bullet disparar() {
@@ -162,6 +217,11 @@ public abstract class NaveBase implements Conectable, Atacable, Actualizable {
 
     public boolean checkCollision(EnemigoBase enemigo) {
         if (!herido && enemigo.getArea().overlaps(spr.getBoundingRectangle())) {
+            // Nota: la llamada a conectar se aconseja hacer desde PantallaJuego antes de checkCollision
+            if (estaTransformada()) {
+                return true;
+            }
+            // Si no se transformó, aplicar daño
             if (xVel == 0) xVel += enemigo.getXSpeed() / 2f;
             if (enemigo.getXSpeed() == 0) enemigo.setXSpeed(enemigo.getXSpeed() + (int) xVel / 2);
             xVel = -xVel;
@@ -193,16 +253,54 @@ public abstract class NaveBase implements Conectable, Atacable, Actualizable {
     }
 
     @Override
-    public void conectar(Conectable otro) {
-        // lógica por defecto
+    public boolean conectar(Atacable otro) {
+        if (otro instanceof EnemigoBase) {
+            EnemigoBase enemigo = (EnemigoBase) otro;
+            float porcentaje = (float) enemigo.getVidas() / Math.max(1, enemigo.getVidaMaxima());
+            if (porcentaje <= 0.25f && juego != null) {
+                if (enemigo instanceof EnemigoNormal) {
+                    // Usar las texturas provistas por el juego para evitar recargas
+                    Texture texNaveEN = juego.getTexturaNaveENormal();
+                    Texture texNaveENDebil = juego.getTexturaNaveENormalDebil();
+                    Texture texBalaEN = juego.getTexturaBalaENormal();
+                    Sound sHerido = juego.getSonidoHerido();
+                    Sound sBala = juego.getSonidoBala();
+
+                    NaveBase nueva = new NaveENormal(
+                        spr.getX(), spr.getY(),
+                        texNaveEN, texNaveENDebil ,sHerido, texBalaEN, sBala
+                    );
+                    nueva.setVidas(this.vidas);
+                    nueva.setJuego(juego);
+                    juego.transformarEn(nueva);
+                    this.transformada = true;
+                    return true;
+                }
+            }
+        }
+        return false; // no se transformó
     }
 
     @Override
     public abstract void actualizarSprite();
 
-    public boolean estaHerido() { return herido; }
-    public int getVidas() { return vidas; }
-    public int getX() { return (int) spr.getX(); }
-    public int getY() { return (int) spr.getY(); }
-    public void setVidas(int v) { vidas = v; }
+    public boolean estaHerido() {
+        return herido;
+    }
+
+    public int getVidas() {
+        return vidas;
+    }
+
+    public int getX() {
+        return (int) spr.getX();
+    }
+
+    public int getY() {
+        return (int) spr.getY();
+    }
+
+    public void setVidas(int v) {
+        vidas = v;
+    }
 }
