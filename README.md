@@ -56,16 +56,16 @@ Este juego ha sido desarrollado en Java y puede ejecutarse utilizando IntelliJ I
 
 **Iniciar el juego**
 
-El juego presenta una pantalla de inicio donde debe presionar cualquier botón para comenzar.
+- El juego presenta una pantalla de inicio donde debe presionar cualquier botón para comenzar.
 
 **Pantalla del nivel**
 
-En esta pantalla se encuentra nuestra nave y los distintos enemigos correspondientes al primer nivel, además en el HUD se encuentran las vidas, ronda (nivel), highscore (corresponde al puntaje más alto obtenido mientras el juego este ejecutado) y score (puntaje de la partida actual).
+- En esta pantalla se encuentra nuestra nave y los distintos enemigos correspondientes al primer nivel, además en el HUD se encuentran las vidas, ronda (nivel), highscore (corresponde al puntaje más alto obtenido mientras el juego este ejecutado) y score (puntaje de la partida actual).
 
 **Controles y Enfrentamiento**
 
-Usa las teclas de dirección para mover la nave y la barra espaciadora para disparar, los enemigos aparecen automáticamente y se mueven con distintos patrones, además, luego de dejarlos a poca vida, cambiará su Sprite y el jugador podrá acoplarse a la nave enemiga acercandoce a esta, mejorando la velocidad o el tipo de disparo del jugador, dependiendo del enemigo. 
+- Usa las teclas de dirección para mover la nave y la barra espaciadora para disparar, los enemigos aparecen automáticamente y se mueven con distintos patrones, además, luego de dejarlos a poca vida, cambiará su Sprite y el jugador podrá acoplarse a la nave enemiga acercandoce a esta, mejorando la velocidad o el tipo de disparo del jugador, dependiendo del enemigo. 
 
 **Sobrevivir el mayor tiempo posible**
 
-El juego continúa generando enemigos y proyectiles hasta que la nave del jugador pierda todas sus vidas.
+- El juego continúa generando enemigos y proyectiles hasta que la nave del jugador pierda todas sus vidas.
