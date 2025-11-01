@@ -29,6 +29,9 @@ public class PantallaJuego implements Screen {
     private ArrayList<EnemigoBase> enemigos = new ArrayList<>();
     private ArrayList<Bullet> balas = new ArrayList<>();
 
+    // Fondo de gameplay
+    private Texture fondoGameplay;
+
     // Texturas y sonidos compartidos (incluyendo versiones débiles)
     private Texture texturaNaveDefault;
     private Texture texturaNaveDefaultDebil;
@@ -41,7 +44,7 @@ public class PantallaJuego implements Screen {
     private Sound sonidoHerido;
     private Sound sonidoBala;
 
-    // Texturas de enemigos (si quieres mantenerlas centralizadas)
+    // Texturas de enemigos
     private Texture texEnemigoGrande;
     private Texture texEnemigoGrandeDebil;
     private Texture texEnemigoNormal;
@@ -58,7 +61,7 @@ public class PantallaJuego implements Screen {
 
         batch = game.getBatch();
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 800, 640);
+        camera.setToOrtho(false, 1200, 800);
 
         explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
         explosionSound.setVolume(1, 0.1f);
@@ -66,6 +69,9 @@ public class PantallaJuego implements Screen {
         gameMusic.setLooping(true);
         gameMusic.setVolume(0.3f);
         gameMusic.play();
+
+        // Cargar fondo de gameplay (archivo en assets: "fondoGameplay.png")
+        fondoGameplay = new Texture(Gdx.files.internal("fondoGameplay.png"));
 
         // Cargar texturas y sonidos una vez (incluyendo versiones débiles)
         texturaNaveDefault = new Texture(Gdx.files.internal("NaveDefault.png"));
@@ -127,7 +133,11 @@ public class PantallaJuego implements Screen {
     @Override
     public void render(float delta) {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         batch.begin();
+
+        // Dibujar fondo estirado al viewport
+        batch.draw(fondoGameplay, 0, 0, camera.viewportWidth, camera.viewportHeight);
 
         dibujaEncabezado();
 
@@ -274,6 +284,8 @@ public class PantallaJuego implements Screen {
     @Override public void hide() {}
     @Override public void dispose() {
         // disposar texturas y sonidos que cargaste aquí
+        if (fondoGameplay != null) fondoGameplay.dispose();
+
         if (texturaNaveDefault != null) texturaNaveDefault.dispose();
         if (texturaNaveDefaultDebil != null) texturaNaveDefaultDebil.dispose();
         if (texturaBalaDefault != null) texturaBalaDefault.dispose();
