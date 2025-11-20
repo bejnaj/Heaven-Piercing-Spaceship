@@ -12,4 +12,4 @@ public class EnemigoNormal extends EnemigoBase {
         // El enemigo normal no tiene comportamiento especial más allá de moverse y recibir daño.
     }
 }
-}
+

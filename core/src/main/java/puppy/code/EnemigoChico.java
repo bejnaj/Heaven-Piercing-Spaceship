@@ -12,4 +12,4 @@ public class EnemigoChico extends EnemigoBase {
         // El enemigo chico no tiene comportamiento especial más allá de moverse y recibir daño.
     }
 }
-}
+
