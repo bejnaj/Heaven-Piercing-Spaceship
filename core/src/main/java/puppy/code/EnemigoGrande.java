@@ -8,11 +8,10 @@ public class EnemigoGrande extends EnemigoBase {
     private int vidasMax;
 
     public EnemigoGrande(Texture texturaNormal, Texture texturaDañado, int x, int y, int size, int xSpeed, int ySpeed) {
-        super(5, texturaNormal, x, y, size, xSpeed, ySpeed); // ejemplo: 4 vidas
+        super(new MovimientoRebote(xSpeed, ySpeed), 5, texturaNormal, x, y, size);
         this.texturaNormal = texturaNormal;
         this.texturaDañado = texturaDañado;
         this.vidasMax = 5;
-        this.debil = false;
     }
     @Override
     public void actualizarSprite() {

@@ -19,7 +19,6 @@ public class PantallaJuego implements Screen {
     private SpriteBatch batch;
     private Sound explosionSound;
     private Music gameMusic;
-    private int score;
     private int ronda;
     private int velXEnemigos;
     private int velYEnemigos;
@@ -50,11 +49,10 @@ public class PantallaJuego implements Screen {
     private Texture texEnemigoNormal;
     private Texture texEnemigoNormalDebil;
 
-    public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,
+    public PantallaJuego(SpaceNavigation game, int ronda, int vidas,
                          int velXEnemigos, int velYEnemigos, int cantEnemigos) {
         this.game = game;
         this.ronda = ronda;
-        this.score = score;
         this.velXEnemigos = velXEnemigos;
         this.velYEnemigos = velYEnemigos;
         this.cantEnemigos = cantEnemigos;
@@ -123,11 +121,13 @@ public class PantallaJuego implements Screen {
     }
 
     public void dibujaEncabezado() {
+        int puntajeActual = GerentePuntuacion.getInstance().getScoreActual();
+        int record = GerentePuntuacion.getInstance().getHighScore();
         CharSequence str = "Vidas: " + nave.getVidas() + " Ronda: " + ronda;
         game.getFont().getData().setScale(2f);
         game.getFont().draw(batch, str, 10, 30);
-        game.getFont().draw(batch, "Score: " + score, Gdx.graphics.getWidth() - 150, 30);
-        game.getFont().draw(batch, "HighScore: " + game.getHighScore(), Gdx.graphics.getWidth() / 2f - 100, 30);
+        game.getFont().draw(batch, "Score: " + puntajeActual, Gdx.graphics.getWidth() - 150, 30);
+        game.getFont().draw(batch, "HighScore: " + record, Gdx.graphics.getWidth() / 2f - 100, 30);
     }
 
     @Override
@@ -153,7 +153,8 @@ public class PantallaJuego implements Screen {
                         explosionSound.play();
                         enemigos.remove(j);
                         j--;
-                        score += 10;
+                        // SUMAR al Singleton
+                        GerentePuntuacion.getInstance().agregarPuntaje(10);
                     }
                     b.setDestroyed(true);
                 }
@@ -229,17 +230,14 @@ public class PantallaJuego implements Screen {
 
         // Game over
         if (nave.estaDestruido()) {
-            if (score > game.getHighScore()) {
-                game.setHighScore(score);
-            }
             game.setScreen(new PantallaGameOver(game));
             dispose();
         }
 
         // Nivel completado
         if (enemigos.isEmpty()) {
-            game.setScreen(new PantallaJuego(game, ronda + 1, nave.getVidas(), score,
-                velXEnemigos + 3, velYEnemigos + 3, cantEnemigos + 6));
+            // Nota: En el new PantallaJuego, pasa 0 o quita el parámetro del constructor
+            game.setScreen(new PantallaJuego(game, ronda + 1, nave.getVidas(), velXEnemigos + 1, velYEnemigos + 1, cantEnemigos + 2));
             dispose();
         }
 
