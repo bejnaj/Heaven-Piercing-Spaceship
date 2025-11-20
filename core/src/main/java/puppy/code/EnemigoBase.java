@@ -15,118 +15,89 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
     // PATRÓN STRATEGY
     protected EstrategiaMovimiento estrategia;
 
-    public EnemigoBase(EstrategiaMovimiento estrategia, int vidas, Texture textura, int x, int y, int size) {
+    // Texturas guardadas en el padre para gestionar el daño automáticamente
+    protected Texture texNormal;
+    protected Texture texDebil;
+
+    public EnemigoBase(EstrategiaMovimiento estrategia, int vidas, Texture tNormal, Texture tDebil, int x, int y, int size) {
+        this.estrategia = estrategia;
         this.vidas = vidas;
         this.vidaMaxima = vidas;
-        this.estrategia = estrategia;
+        this.texNormal = tNormal;
+        this.texDebil = tDebil;
 
-        this.spr = new Sprite(textura);
+        this.spr = new Sprite(tNormal);
         this.spr.setSize(size, size);
         this.spr.setOriginCenter();
         this.spr.setPosition(x, y);
     }
 
-    // PATRÓN TEMPLATE METHOD: Método 'final' que orquesta el update
+    // --- PATRÓN TEMPLATE METHOD ---
+    // Este método es FINAL. Define el orden exacto de ejecución.
     @Override
     public final void update() {
-        // PASO 1: Mover usando la estrategia
+        float delta = Gdx.graphics.getDeltaTime();
+
+        // PASO 1: Moverse (Delegado a Strategy)
         if (estrategia != null) {
-            estrategia.mover(spr, Gdx.graphics.getDeltaTime());
+            estrategia.mover(spr, delta);
         }
 
-        // PASO 2: Actualizar visuales (implementado por los hijos)
-        actualizarSprite();
+        // PASO 2: Gestión visual de daño (Lógica común)
+        gestionarCambioTextura();
+
+        // PASO 3: Comportamiento único (Hook abstracto)
+        realizarComportamientoEspecifico();
     }
 
-    public void draw(SpriteBatch batch) {
-        spr.draw(batch);
-    }
-
-    public Rectangle getArea() {
-        return spr.getBoundingRectangle();
-    }
-
-    // Colisión entre enemigos (rebote)
-    public void checkCollision(EnemigoBase otro) {
-        if (spr.getBoundingRectangle().overlaps(otro.getArea())) {
-            // Usamos los getters/setters que delegan a la estrategia
-            int miVX = this.getXSpeed();
-            int miVY = this.getYSpeed();
-            int otroVX = otro.getXSpeed();
-            int otroVY = otro.getYSpeed();
-
-            // Lógica de intercambio de velocidad (rebote simple)
-            if (miVX == 0) miVX += otroVX / 2;
-            if (otroVX == 0) otroVX += miVX / 2;
-
-            // Invertir velocidades
-            this.setXSpeed(-miVX);
-            otro.setXSpeed(-otroVX);
-
-            if (miVY == 0) miVY += otroVY / 2;
-            if (otroVY == 0) otroVY += miVY / 2;
-
-            // Invertir velocidades verticales
-            this.setYSpeed(-miVY);
-            otro.setYSpeed(-otroVY);
+    // Implementación del Paso 2 (Común para todos)
+    private void gestionarCambioTextura() {
+        float porcentaje = (float) vidas / vidaMaxima;
+        if (porcentaje <= 0.25f && !debil) {
+            if (texDebil != null) spr.setTexture(texDebil);
+            debil = true;
+        } else if (porcentaje > 0.25f && debil) {
+            if (texNormal != null) spr.setTexture(texNormal);
+            debil = false;
         }
     }
 
+    // Declaración del Paso 3 (Cada hijo debe definir qué hace aquí)
+    public abstract void realizarComportamientoEspecifico();
+
+    // --- MÉTODOS COMUNES ---
     @Override
-    public void recibirDano(int cantidad) {
-        vidas -= cantidad;
-    }
-
+    public void draw(SpriteBatch batch) { spr.draw(batch); }
     @Override
-    public boolean estaDestruido() {
-        return vidas <= 0;
-    }
-
+    public Rectangle getArea() { return spr.getBoundingRectangle(); }
     @Override
-    public abstract void actualizarSprite();
-
+    public void recibirDano(int cantidad) { vidas -= cantidad; }
     @Override
-    public boolean conectar(Atacable otro) {
-        // Lógica por defecto
-        return false;
-    }
+    public boolean estaDestruido() { return vidas <= 0; }
 
-    // --- GETTERS Y SETTERS DELEGADOS A LA ESTRATEGIA ---
-    // Estos métodos permiten que otras clases (como NaveBase) interactúen con la velocidad
-    // aunque internamente sea manejada por la estrategia.
-
+    // Getters delegados a Strategy
     public int getXSpeed() {
-        if (estrategia instanceof MovimientoRebote) {
-            return (int) ((MovimientoRebote) estrategia).getXSpeed();
-        }
+        if (estrategia instanceof MovimientoRebote) return (int)((MovimientoRebote)estrategia).getXSpeed();
         return 0;
     }
-
     public int getYSpeed() {
-        if (estrategia instanceof MovimientoRebote) {
-            return (int) ((MovimientoRebote) estrategia).getYSpeed();
-        }
+        if (estrategia instanceof MovimientoRebote) return (int)((MovimientoRebote)estrategia).getYSpeed();
         return 0;
     }
-
     public void setXSpeed(int x) {
-        if (estrategia instanceof MovimientoRebote) {
-            ((MovimientoRebote) estrategia).setXSpeed(x);
-        }
+        if (estrategia instanceof MovimientoRebote) ((MovimientoRebote)estrategia).setXSpeed(x);
     }
-
     public void setYSpeed(int y) {
-        if (estrategia instanceof MovimientoRebote) {
-            ((MovimientoRebote) estrategia).setYSpeed(y);
-        }
+        if (estrategia instanceof MovimientoRebote) ((MovimientoRebote)estrategia).setYSpeed(y);
     }
 
-    // --- OTROS GETTERS ---
-
-    public int getVidaMaxima() { return vidaMaxima; }
+    // Getters simples
     public int getVidas() { return vidas; }
-    public void setVidas(int v) { vidas = v; }
-
+    public int getVidaMaxima() { return vidaMaxima; }
+    public void setVidas(int v) { this.vidas = v; }
     public float getX() { return spr.getX(); }
     public float getY() { return spr.getY(); }
+
+    @Override public void actualizarSprite() {} // Ya no se usa externamente, lo maneja el update
+    @Override public boolean conectar(Atacable otro) { return false; }
 }
