@@ -15,7 +15,7 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
     // PATRÓN STRATEGY
     protected EstrategiaMovimiento estrategia;
 
-    // Texturas guardadas en el padre para gestionar el daño automáticamente
+    // Texturas
     protected Texture texNormal;
     protected Texture texDebil;
 
@@ -32,25 +32,23 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
         this.spr.setPosition(x, y);
     }
 
-    // --- PATRÓN TEMPLATE METHOD ---
-    // Este método es FINAL. Define el orden exacto de ejecución.
+    // --- TEMPLATE METHOD ---
     @Override
     public final void update() {
         float delta = Gdx.graphics.getDeltaTime();
 
-        // PASO 1: Moverse (Delegado a Strategy)
+        // 1. Moverse (Strategy)
         if (estrategia != null) {
             estrategia.mover(spr, delta);
         }
 
-        // PASO 2: Gestión visual de daño (Lógica común)
+        // 2. Gestión visual
         gestionarCambioTextura();
 
-        // PASO 3: Comportamiento único (Hook abstracto)
+        // 3. Hook
         realizarComportamientoEspecifico();
     }
 
-    // Implementación del Paso 2 (Común para todos)
     private void gestionarCambioTextura() {
         float porcentaje = (float) vidas / vidaMaxima;
         if (porcentaje <= 0.25f && !debil) {
@@ -62,42 +60,69 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
         }
     }
 
-    // Declaración del Paso 3 (Cada hijo debe definir qué hace aquí)
     public abstract void realizarComportamientoEspecifico();
 
-    // --- MÉTODOS COMUNES ---
-    @Override
-    public void draw(SpriteBatch batch) { spr.draw(batch); }
-    @Override
-    public Rectangle getArea() { return spr.getBoundingRectangle(); }
-    @Override
-    public void recibirDano(int cantidad) { vidas -= cantidad; }
-    @Override
-    public boolean estaDestruido() { return vidas <= 0; }
+    // --- MÉTODO QUE TE DABA ERROR: COLISIÓN ENTRE ENEMIGOS ---
+    public void checkCollision(EnemigoBase otro) {
+        if (spr.getBoundingRectangle().overlaps(otro.getArea())) {
+            // Aquí usamos los getters puente definidos abajo
+            int miVX = this.getXSpeed();
+            int miVY = this.getYSpeed();
+            int otroVX = otro.getXSpeed();
+            int otroVY = otro.getYSpeed();
 
-    // Getters delegados a Strategy
+            if (miVX == 0) miVX += otroVX / 2;
+            if (otroVX == 0) otroVX += miVX / 2;
+            this.setXSpeed(-miVX);
+            otro.setXSpeed(-otroVX);
+
+            if (miVY == 0) miVY += otroVY / 2;
+            if (otroVY == 0) otroVY += miVY / 2;
+            this.setYSpeed(-miVY);
+            otro.setYSpeed(-otroVY);
+        }
+    }
+
+    // --- MÉTODOS PUENTE OBLIGATORIOS (Para que NaveBase y checkCollision funcionen) ---
+    // Estos métodos sacan la velocidad desde dentro de la estrategia
     public int getXSpeed() {
-        if (estrategia instanceof MovimientoRebote) return (int)((MovimientoRebote)estrategia).getXSpeed();
+        if (estrategia instanceof MovimientoRebote) {
+            return (int) ((MovimientoRebote) estrategia).getXSpeed();
+        }
         return 0;
-    }
-    public int getYSpeed() {
-        if (estrategia instanceof MovimientoRebote) return (int)((MovimientoRebote)estrategia).getYSpeed();
-        return 0;
-    }
-    public void setXSpeed(int x) {
-        if (estrategia instanceof MovimientoRebote) ((MovimientoRebote)estrategia).setXSpeed(x);
-    }
-    public void setYSpeed(int y) {
-        if (estrategia instanceof MovimientoRebote) ((MovimientoRebote)estrategia).setYSpeed(y);
     }
 
-    // Getters simples
+    public int getYSpeed() {
+        if (estrategia instanceof MovimientoRebote) {
+            return (int) ((MovimientoRebote) estrategia).getYSpeed();
+        }
+        return 0;
+    }
+
+    public void setXSpeed(int x) {
+        if (estrategia instanceof MovimientoRebote) {
+            ((MovimientoRebote) estrategia).setXSpeed(x);
+        }
+    }
+
+    public void setYSpeed(int y) {
+        if (estrategia instanceof MovimientoRebote) {
+            ((MovimientoRebote) estrategia).setYSpeed(y);
+        }
+    }
+
+    // --- MÉTODOS COMUNES ---
+    public void draw(SpriteBatch batch) { spr.draw(batch); }
+    public Rectangle getArea() { return spr.getBoundingRectangle(); }
+
+    @Override public void recibirDano(int cantidad) { vidas -= cantidad; }
+    @Override public boolean estaDestruido() { return vidas <= 0; }
+    @Override public void actualizarSprite() {}
+    @Override public boolean conectar(Atacable otro) { return false; }
+
     public int getVidas() { return vidas; }
     public int getVidaMaxima() { return vidaMaxima; }
-    public void setVidas(int v) { this.vidas = v; }
+    public void setVidas(int v) { vidas = v; }
     public float getX() { return spr.getX(); }
     public float getY() { return spr.getY(); }
-
-    @Override public void actualizarSprite() {} // Ya no se usa externamente, lo maneja el update
-    @Override public boolean conectar(Atacable otro) { return false; }
 }

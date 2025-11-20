@@ -16,10 +16,13 @@ public class NaveENormal extends NaveBase {
 
     @Override
     public void actualizarSprite() {
-        if (estaHerido()) {
-            spr.setColor(1f, 0.6f, 0.6f, 1f); // tono rojizo
+        // Inclinación exagerada al moverse
+        if (xVel > 50) {
+            spr.setRotation(-15); // Se inclina a la derecha
+        } else if (xVel < -50) {
+            spr.setRotation(15);  // Se inclina a la izquierda
         } else {
-            spr.setColor(1f, 1f, 1f, 1f);     // color normal
+            spr.setRotation(0);
         }
     }
 }
