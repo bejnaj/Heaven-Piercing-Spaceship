@@ -10,38 +10,32 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
     protected int vidas;
     protected int vidaMaxima;
     protected Sprite spr;
-    protected int xSpeed;
-    protected int ySpeed;
     protected boolean debil = false;
 
-    public EnemigoBase(int vidas, Texture textura, int x, int y, int size, int xSpeed, int ySpeed) {
+    // PATRÓN STRATEGY
+    protected EstrategiaMovimiento estrategia;
+
+    public EnemigoBase(EstrategiaMovimiento estrategia, int vidas, Texture textura, int x, int y, int size) {
         this.vidas = vidas;
         this.vidaMaxima = vidas;
+        this.estrategia = estrategia;
 
         this.spr = new Sprite(textura);
         this.spr.setSize(size, size);
         this.spr.setOriginCenter();
-
-        // Validar que no quede fuera de pantalla
-        if (x - size < 0) x += size;
-        if (x + size > Gdx.graphics.getWidth()) x -= size;
-        if (y - size < 0) y += size;
-        if (y + size > Gdx.graphics.getHeight()) y -= size;
-
         this.spr.setPosition(x, y);
-        this.xSpeed = xSpeed;
-        this.ySpeed = ySpeed;
     }
 
-    public void update() {
-        float x = spr.getX() + xSpeed;
-        float y = spr.getY() + ySpeed;
+    // PATRÓN TEMPLATE METHOD: Método 'final' que orquesta el update
+    @Override
+    public final void update() {
+        // PASO 1: Mover usando la estrategia
+        if (estrategia != null) {
+            estrategia.mover(spr, Gdx.graphics.getDeltaTime());
+        }
 
-        // Rebote en bordes
-        if (x < 0 || x + spr.getWidth() > Gdx.graphics.getWidth()) xSpeed *= -1;
-        if (y < 0 || y + spr.getHeight() > Gdx.graphics.getHeight()) ySpeed *= -1;
-
-        spr.setPosition(spr.getX() + xSpeed, spr.getY() + ySpeed);
+        // PASO 2: Actualizar visuales (implementado por los hijos)
+        actualizarSprite();
     }
 
     public void draw(SpriteBatch batch) {
@@ -52,18 +46,29 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
         return spr.getBoundingRectangle();
     }
 
+    // Colisión entre enemigos (rebote)
     public void checkCollision(EnemigoBase otro) {
         if (spr.getBoundingRectangle().overlaps(otro.getArea())) {
-            // Rebote simple
-            if (xSpeed == 0) xSpeed += otro.xSpeed / 2;
-            if (otro.xSpeed == 0) otro.xSpeed += xSpeed / 2;
-            xSpeed = -xSpeed;
-            otro.xSpeed = -otro.xSpeed;
+            // Usamos los getters/setters que delegan a la estrategia
+            int miVX = this.getXSpeed();
+            int miVY = this.getYSpeed();
+            int otroVX = otro.getXSpeed();
+            int otroVY = otro.getYSpeed();
 
-            if (ySpeed == 0) ySpeed += otro.ySpeed / 2;
-            if (otro.ySpeed == 0) otro.ySpeed += ySpeed / 2;
-            ySpeed = -ySpeed;
-            otro.ySpeed = -otro.ySpeed;
+            // Lógica de intercambio de velocidad (rebote simple)
+            if (miVX == 0) miVX += otroVX / 2;
+            if (otroVX == 0) otroVX += miVX / 2;
+
+            // Invertir velocidades
+            this.setXSpeed(-miVX);
+            otro.setXSpeed(-otroVX);
+
+            if (miVY == 0) miVY += otroVY / 2;
+            if (otroVY == 0) otroVY += miVY / 2;
+
+            // Invertir velocidades verticales
+            this.setYSpeed(-miVY);
+            otro.setYSpeed(-otroVY);
         }
     }
 
@@ -82,17 +87,43 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
 
     @Override
     public boolean conectar(Atacable otro) {
-        // lógica por defecto
+        // Lógica por defecto
         return false;
     }
 
-    // Getters y setters útiles
-    public int getXSpeed() { return xSpeed; }
-    public void setXSpeed(int xSpeed) { this.xSpeed = xSpeed; }
-    public int getVidaMaxima() { return vidaMaxima; }
-    public int getYSpeed() { return ySpeed; }
-    public void setYSpeed(int ySpeed) { this.ySpeed = ySpeed; }
+    // --- GETTERS Y SETTERS DELEGADOS A LA ESTRATEGIA ---
+    // Estos métodos permiten que otras clases (como NaveBase) interactúen con la velocidad
+    // aunque internamente sea manejada por la estrategia.
 
+    public int getXSpeed() {
+        if (estrategia instanceof MovimientoRebote) {
+            return (int) ((MovimientoRebote) estrategia).getXSpeed();
+        }
+        return 0;
+    }
+
+    public int getYSpeed() {
+        if (estrategia instanceof MovimientoRebote) {
+            return (int) ((MovimientoRebote) estrategia).getYSpeed();
+        }
+        return 0;
+    }
+
+    public void setXSpeed(int x) {
+        if (estrategia instanceof MovimientoRebote) {
+            ((MovimientoRebote) estrategia).setXSpeed(x);
+        }
+    }
+
+    public void setYSpeed(int y) {
+        if (estrategia instanceof MovimientoRebote) {
+            ((MovimientoRebote) estrategia).setYSpeed(y);
+        }
+    }
+
+    // --- OTROS GETTERS ---
+
+    public int getVidaMaxima() { return vidaMaxima; }
     public int getVidas() { return vidas; }
     public void setVidas(int v) { vidas = v; }
 
