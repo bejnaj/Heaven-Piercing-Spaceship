@@ -36,16 +36,10 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
     @Override
     public final void update() {
         float delta = Gdx.graphics.getDeltaTime();
-
-        // 1. Moverse (Strategy)
         if (estrategia != null) {
             estrategia.mover(spr, delta);
         }
-
-        // 2. Gestión visual
         gestionarCambioTextura();
-
-        // 3. Hook
         realizarComportamientoEspecifico();
     }
 
@@ -62,10 +56,9 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
 
     public abstract void realizarComportamientoEspecifico();
 
-    // --- MÉTODO QUE TE DABA ERROR: COLISIÓN ENTRE ENEMIGOS ---
+    // --- COLISIÓN ENTRE ENEMIGOS ---
     public void checkCollision(EnemigoBase otro) {
         if (spr.getBoundingRectangle().overlaps(otro.getArea())) {
-            // Aquí usamos los getters puente definidos abajo
             int miVX = this.getXSpeed();
             int miVY = this.getYSpeed();
             int otroVX = otro.getXSpeed();
@@ -110,11 +103,8 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
             ((MovimientoRebote) estrategia).setYSpeed(y);
         }
     }
-
-    // --- MÉTODOS COMUNES ---
     public void draw(SpriteBatch batch) { spr.draw(batch); }
     public Rectangle getArea() { return spr.getBoundingRectangle(); }
-
     @Override public void recibirDano(int cantidad) { vidas -= cantidad; }
     @Override public boolean estaDestruido() { return vidas <= 0; }
     @Override public void actualizarSprite() {}

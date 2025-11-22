@@ -15,7 +15,7 @@ public class PantallaVictoriaSecreta implements Screen {
     public PantallaVictoriaSecreta(SpaceNavigation game) {
         this.game = game;
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 1200, 800);
+        camera.setToOrtho(false, 1920, 1080);
         // Asegúrate de tener este archivo en assets
         imagenVictoria = new Texture(Gdx.files.internal("victoriaSecreta.png"));
     }
@@ -27,7 +27,7 @@ public class PantallaVictoriaSecreta implements Screen {
         game.getBatch().setProjectionMatrix(camera.combined);
 
         game.getBatch().begin();
-        game.getBatch().draw(imagenVictoria, 0, 0, 1200, 800);
+        game.getBatch().draw(imagenVictoria, 0, 0, 1920, 1080);
         game.getFont().getData().setScale(2);
         game.getFont().draw(game.getBatch(), "¡HAS FUSIONADO EL NÚCLEO DEL JEFE!", 300, 100);
         game.getBatch().end();

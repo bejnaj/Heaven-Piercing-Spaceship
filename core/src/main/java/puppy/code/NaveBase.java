@@ -43,6 +43,7 @@ public abstract class NaveBase implements Atacable, Actualizable {
     }
 
     public NaveBase(int vidas, Texture texturaNave, Texture texturaNaveDebil, Texture texturaBala, Sound sonidoHerido, Sound sonidoBala, float x, float y) {
+        this.spr = new Sprite(texturaNave);
         this.vidas = vidas;
         this.texturaNave = texturaNave;
         this.texturaNaveDebil = texturaNaveDebil;
@@ -50,7 +51,7 @@ public abstract class NaveBase implements Atacable, Actualizable {
         this.sonidoHerido = sonidoHerido;
         this.sonidoBala = sonidoBala;
         this.spr = new Sprite(texturaNave);
-        spr.setSize(45, 45);
+        spr.setSize(70, 90);
         spr.setOriginCenter();
         spr.setPosition(x, y);
     }
@@ -156,22 +157,46 @@ public abstract class NaveBase implements Atacable, Actualizable {
             float porcentaje = (float) enemigo.getVidas() / Math.max(1, enemigo.getVidaMaxima());
 
             if (porcentaje <= 0.25f) {
-                Texture tN = juego.getTexturaNaveENormal();
-                Texture tND = juego.getTexturaNaveENormalDebil();
-                Texture tB = juego.getTexturaBalaENormal();
+                // Recursos comunes
                 Sound sH = juego.getSonidoHerido();
                 Sound sB = juego.getSonidoBala();
+                Texture tBala = juego.getTexturaBalaENormal(); // O usa balas específicas si las cargaste
 
                 NaveBase nueva = null;
-                if (enemigo instanceof EnemigoChico) nueva = new NaveEChico(spr.getX(), spr.getY(), tN, tND, sH, tB, sB);
-                else if (enemigo instanceof EnemigoGrande) nueva = new NaveEGrande(spr.getX(), spr.getY(), tN, tND, sH, tB, sB);
-                else if (enemigo instanceof EnemigoNormal) nueva = new NaveENormal(spr.getX(), spr.getY(), tN, tND, sH, tB, sB);
+
+                // 1. Fusión con CHICO -> Usa texturas de NaveEChico
+                if (enemigo instanceof EnemigoChico) {
+                    nueva = new NaveEChico(
+                        spr.getX(), spr.getY(),
+                        juego.getTexturaNaveEChico(),      // <--- TEXTURA CORRECTA
+                        juego.getTexturaNaveEChicoDebil(), // <--- TEXTURA CORRECTA
+                        sH, tBala, sB
+                    );
+                }
+                // 2. Fusión con GRANDE -> Usa texturas de NaveEGrande
+                else if (enemigo instanceof EnemigoGrande) {
+                    nueva = new NaveEGrande(
+                        spr.getX(), spr.getY(),
+                        juego.getTexturaNaveEGrande(),      // <--- TEXTURA CORRECTA
+                        juego.getTexturaNaveEGrandeDebil(), // <--- TEXTURA CORRECTA
+                        sH, tBala, sB
+                    );
+                }
+                // 3. Fusión con NORMAL -> Usa texturas de NaveENormal
+                else if (enemigo instanceof EnemigoNormal) {
+                    nueva = new NaveENormal(
+                        spr.getX(), spr.getY(),
+                        juego.getTexturaNaveENormal(),
+                        juego.getTexturaNaveENormalDebil(),
+                        sH, tBala, sB
+                    );
+                }
 
                 if (nueva != null) {
                     nueva.setVidas(this.vidas + 2);
                     nueva.setJuego(juego);
                     juego.transformarEn(nueva);
-                    this.transformada = true; // Actualizamos la variable
+                    this.transformada = true;
                     return true;
                 }
             }
@@ -183,7 +208,24 @@ public abstract class NaveBase implements Atacable, Actualizable {
     public BalaBase disparar() {
         float bx = spr.getX() + spr.getWidth() / 2 - 5;
         float by = spr.getY() + spr.getHeight() / 2 - 5;
-        BalaBase bala = new BalaDefault(bx, by, texturaBala);
+
+        // 1. Obtener el ángulo de la nave
+        // Sumamos 90 porque en LibGDX 0 grados es "Derecha", pero tu sprite mira "Arriba"
+        float anguloGrados = spr.getRotation() + 90;
+        float anguloRadianes = (float) Math.toRadians(anguloGrados);
+
+        // 2. Calcular velocidad basada en el ángulo (Trigonometría básica)
+        float velocidadBala = 400f; // Rapidez de la bala
+        float vx = (float) Math.cos(anguloRadianes) * velocidadBala;
+        float vy = (float) Math.sin(anguloRadianes) * velocidadBala;
+
+        // 3. Crear la bala pasándole la velocidad calculada
+        BalaDefault bala = new BalaDefault(bx, by, vx, vy, texturaBala);
+
+        // 4. Rotar la bala para que coincida visualmente con la dirección
+        // Accedemos al sprite de la bala (asegúrate que 'spr' sea protected en BalaBase o usa un getter)
+        bala.spr.setRotation(spr.getRotation());
+
         shootCooldown = shootCooldownMax;
         return bala;
     }
@@ -194,10 +236,22 @@ public abstract class NaveBase implements Atacable, Actualizable {
         return vel;
     }
     private void actualizarRotacion() {
-        float vx = xVel; float vy = yVel;
-        if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
-            spr.setRotation((float)Math.toDegrees(Math.atan2(vy, vx)) - 90f);
-        } else spr.setRotation(0);
+        float vx = xVel;
+        float vy = yVel;
+        float eps = 5f;
+
+        // SOLO cambiamos la rotación si la nave tiene velocidad significativa
+        if (Math.abs(vx) > eps || Math.abs(vy) > eps) {
+            // Calculamos el ángulo matemático (atan2 devuelve ángulo donde 0 es Derecha)
+            float ang = (float) Math.toDegrees(Math.atan2(vy, vx));
+
+            // Restamos 90 grados porque tu sprite original mira hacia ARRIBA
+            spr.setRotation(ang - 90f);
+        }
+
+        // ELIMINADO: El bloque 'else'.
+        // Al no hacer nada cuando está quieta, el Sprite conserva
+        // automáticamente la última rotación que tenía.
     }
     protected void aplicarTexturaSegunVida() {
         if (texturaNaveDebil == null) return;

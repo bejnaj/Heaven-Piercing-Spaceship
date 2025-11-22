@@ -2,24 +2,24 @@ package puppy.code;
 import com.badlogic.gdx.graphics.Texture;
 
 public class FabricaNivelFacil implements FabricaEnemigos {
-    // AGREGADO: texChicoDebil
-    private Texture texNormal, texNormalDebil, texGrande, texGrandeDebil, texChico, texChicoDebil;
+    // Agregamos variables para Chico y Jefe
+    private Texture texNormal, texNormalDebil;
+    private Texture texGrande, texGrandeDebil;
+    private Texture texChico, texChicoDebil;
+    private Texture texJefe, texJefeDebil; // Aunque no se use aquí, la estructura la pide
 
-    public FabricaNivelFacil(Texture tN, Texture tND, Texture tG, Texture tGD) {
-        this.texNormal = tN;
-        this.texNormalDebil = tND;
-        this.texGrande = tG;
-        this.texGrandeDebil = tGD;
-
-        // Reusamos las texturas del normal para el chico
-        this.texChico = tN;
-        this.texChicoDebil = tND; // AGREGADO: Inicialización
+    // Constructor gigante actualizado
+    public FabricaNivelFacil(Texture tN, Texture tND, Texture tG, Texture tGD,
+                             Texture tC, Texture tCD, Texture tJ, Texture tJD) {
+        this.texNormal = tN; this.texNormalDebil = tND;
+        this.texGrande = tG; this.texGrandeDebil = tGD;
+        this.texChico = tC;  this.texChicoDebil = tCD;
+        this.texJefe = tJ;   this.texJefeDebil = tJD;
     }
 
-    // --- MÉTODOS QUE SÍ SE USAN (Niveles 1, 2, 3) ---
     @Override
     public EnemigoBase crearEnemigoChico(float x, float y) {
-        // AGREGADO: Pasamos texChicoDebil
+        // ¡Ahora sí usa la textura correcta!
         return new EnemigoChico(new MovimientoRebote(300, 300), texChico, texChicoDebil, (int)x, (int)y);
     }
 
@@ -34,16 +34,6 @@ public class FabricaNivelFacil implements FabricaEnemigos {
     }
 
     // --- MÉTODOS QUE NO SE DEBEN USAR EN NIVEL FÁCIL ---
-
-    @Override
-    public EnemigoBase crearEnemigoAleatorio(float x, float y) {
-        // Si por error se llama, devolvemos uno normal para seguridad
-        return crearEnemigoNormal(x, y);
-    }
-
-    @Override
-    public EnemigoBase crearEnemigoJefe(float x, float y, PantallaJuego juego) {
-        // En niveles fáciles NO hay jefe. Retornamos null.
-        return null;
-    }
+    @Override public EnemigoBase crearEnemigoAleatorio(float x, float y) { return crearEnemigoNormal(x, y); }
+    @Override public EnemigoBase crearEnemigoJefe(float x, float y, PantallaJuego j) { return null; }
 }

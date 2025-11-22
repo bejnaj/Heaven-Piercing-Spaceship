@@ -18,7 +18,7 @@ public class PantallaGameOver implements Screen {
 		this.game = game;
 
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 1200, 800);
+        camera.setToOrtho(false, 1920, 1080);
 
 		// cargar efecto de sonido para Game Over
 		gameOverSound = Gdx.audio.newSound(Gdx.files.internal("game-over.mp3"));
@@ -40,7 +40,7 @@ public class PantallaGameOver implements Screen {
 		if (Gdx.input.isTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) {
             GerentePuntuacion.getInstance().resetScore();
 			Screen ss = new PantallaJuego(game,1,3,1,1,6);
-			ss.resize(1200, 800);
+			ss.resize(1920, 1080);
 			game.setScreen(ss);
 			dispose();
 		}

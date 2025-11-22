@@ -16,7 +16,7 @@ public class PantallaMenu implements Screen {
     public PantallaMenu(SpaceNavigation game) {
         this.game = game;
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 1200, 800);
+        camera.setToOrtho(false, 1920, 1080);
 
         // Cargar la imagen de fondo (portada.png) desde assets
         fondo = new Texture(Gdx.files.internal("portada.png"));
@@ -31,11 +31,14 @@ public class PantallaMenu implements Screen {
         game.getBatch().setProjectionMatrix(camera.combined);
 
         game.getBatch().begin();
-        // Dibujar fondo estirado para cubrir todo el viewport actual
+        // El fondo se estira solo, esto está bien:
         game.getBatch().draw(fondo, 0, 0, camera.viewportWidth, camera.viewportHeight);
+        game.getFont().getData().setScale(2.5f); // Más grande para 1080p
+        String texto = "Presiona cualquier tecla para comenzar ...";
+        float x = camera.viewportWidth / 2 - 200;
+        float y = camera.viewportHeight / 2;
 
-        // Texto encima del fondo
-        game.getFont().draw(game.getBatch(), "Presiona en cualquier lado o presiona cualquier tecla para comenzar ...", 120, 70);
+        game.getFont().draw(game.getBatch(), texto, x, y);
         game.getBatch().end();
 
         if (Gdx.input.isTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) {

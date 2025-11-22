@@ -1,27 +1,32 @@
 package puppy.code;
-
 import com.badlogic.gdx.graphics.Texture;
 import java.util.Random;
 
 public class FabricaNivelDificil implements FabricaEnemigos {
-    // AGREGA texChicoDebil AQUÍ
-    private Texture texNormal, texNormalDebil, texGrande, texGrandeDebil, texChico, texChicoDebil;
+    // Definimos las 8 variables necesarias
+    private Texture texNormal, texNormalDebil;
+    private Texture texGrande, texGrandeDebil;
+    private Texture texChico, texChicoDebil;
+    private Texture texJefe, texJefeDebil;
 
-    public FabricaNivelDificil(Texture tN, Texture tND, Texture tG, Texture tGD) {
+    // EL CONSTRUCTOR DEBE RECIBIR LAS 8 TEXTURAS
+    public FabricaNivelDificil(Texture tN, Texture tND, Texture tG, Texture tGD,
+                               Texture tC, Texture tCD, Texture tJ, Texture tJD) {
         this.texNormal = tN;
         this.texNormalDebil = tND;
         this.texGrande = tG;
         this.texGrandeDebil = tGD;
-
-        // Reutilizamos las texturas del enemigo normal para el chico
-        this.texChico = tN;
-        this.texChicoDebil = tND;
+        this.texChico = tC;
+        this.texChicoDebil = tCD;
+        this.texJefe = tJ;
+        this.texJefeDebil = tJD;
     }
 
-    // Versiones más rápidas para niveles avanzados
+    // --- MÉTODOS DE CREACIÓN ---
+
     @Override
     public EnemigoBase crearEnemigoChico(float x, float y) {
-        // Ahora texChicoDebil ya existe y no dará error
+        // Usa la textura correcta (tC y tCD)
         return new EnemigoChico(new MovimientoRebote(500, 500), texChico, texChicoDebil, (int)x, (int)y);
     }
 
@@ -35,7 +40,6 @@ public class FabricaNivelDificil implements FabricaEnemigos {
         return new EnemigoGrande(new MovimientoRebote(150, 150), texGrande, texGrandeDebil, (int)x, (int)y);
     }
 
-    // --- LÓGICA ALEATORIA (Usada en Nivel 4, 5 y por el Jefe) ---
     @Override
     public EnemigoBase crearEnemigoAleatorio(float x, float y) {
         Random r = new Random();
@@ -46,10 +50,9 @@ public class FabricaNivelDificil implements FabricaEnemigos {
         else return crearEnemigoGrande(x, y);
     }
 
-    // --- JEFE (Usado en Nivel 6) ---
     @Override
     public EnemigoBase crearEnemigoJefe(float x, float y, PantallaJuego juego) {
-        // El jefe usará 'this' (esta fábrica difícil) para invocar a sus esbirros
-        return new EnemigoJefe(juego, this, texGrande, texGrandeDebil, (int)x, (int)y);
+        // Usa la textura del Jefe que recibimos en el constructor
+        return new EnemigoJefe(juego, this, texJefe, texJefeDebil, (int)x, (int)y);
     }
 }

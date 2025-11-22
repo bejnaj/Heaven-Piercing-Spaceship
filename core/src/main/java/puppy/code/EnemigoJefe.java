@@ -11,9 +11,7 @@ public class EnemigoJefe extends EnemigoBase {
     private float intervaloSpawn = 3f;
 
     public EnemigoJefe(PantallaJuego juego, FabricaEnemigos fabrica, Texture tNormal, Texture tDebil, int x, int y) {
-        // Estrategia Estática, 50 vidas, tamaño 100
-        // Nota: Necesitas tener la clase MovimientoEstatico creada (o usar null y controlar nulls en update)
-        super(new MovimientoEstatico(), 50, tNormal, tDebil, x, y, 100);
+        super(new MovimientoEstatico(), 50, tNormal, tDebil, x, y, 300);
         this.juego = juego;
         this.fabrica = fabrica;
     }
