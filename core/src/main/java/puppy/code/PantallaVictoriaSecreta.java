@@ -3,40 +3,57 @@ package puppy.code;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class PantallaVictoriaSecreta implements Screen {
+
     private SpaceNavigation game;
     private OrthographicCamera camera;
-    private Texture imagenVictoria;
+    private SpriteBatch batch;
+    private Texture fondoSecreto;
 
     public PantallaVictoriaSecreta(SpaceNavigation game) {
         this.game = game;
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, 1920, 1080);
-        // Asegúrate de tener este archivo en assets
-        imagenVictoria = new Texture(Gdx.files.internal("victoriaSecreta.png"));
+        this.batch = game.getBatch();
+        this.camera = new OrthographicCamera();
+        // Mantenemos la resolución Full HD
+        this.camera.setToOrtho(false, 1920, 1080);
+
+        // Cargar la imagen de victoria secreta
+        fondoSecreto = new Texture(Gdx.files.internal("pantallavictoriasecreto.png"));
     }
 
     @Override
     public void render(float delta) {
-        ScreenUtils.clear(0, 0, 0, 1);
+        Gdx.gl.glClearColor(0, 0, 0.2f, 1); // Un fondo azulado oscuro mientras carga
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         camera.update();
-        game.getBatch().setProjectionMatrix(camera.combined);
+        batch.setProjectionMatrix(camera.combined);
 
-        game.getBatch().begin();
-        game.getBatch().draw(imagenVictoria, 0, 0, 1920, 1080);
-        game.getFont().getData().setScale(2);
-        game.getFont().draw(game.getBatch(), "¡HAS FUSIONADO EL NÚCLEO DEL JEFE!", 300, 100);
-        game.getBatch().end();
+        batch.begin();
+        // Dibujar el fondo secreto estirado
+        batch.draw(fondoSecreto, 0, 0, camera.viewportWidth, camera.viewportHeight);
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.isTouched()) {
-            GerentePuntuacion.getInstance().resetScore();
+        // Opcional: Texto explicativo
+        game.getFont().getData().setScale(2.5f);
+        game.getFont().draw(batch, "¡FUSIÓN COMPLETA!", camera.viewportWidth/2 - 200, camera.viewportHeight - 100);
+
+        batch.end();
+
+        // Al hacer clic, volver al menú
+        if (Gdx.input.isTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) {
             game.setScreen(new PantallaMenu(game));
             dispose();
         }
+    }
+
+    @Override
+    public void dispose() {
+        if (fondoSecreto != null) fondoSecreto.dispose();
     }
 
     @Override public void show() {}
@@ -44,5 +61,4 @@ public class PantallaVictoriaSecreta implements Screen {
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}
-    @Override public void dispose() { imagenVictoria.dispose(); }
 }

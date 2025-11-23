@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 public class EnemigoGrande extends EnemigoBase {
 
     public EnemigoGrande(EstrategiaMovimiento estrategia, Texture tNormal, Texture tDebil, int x, int y) {
-        super(estrategia, 10, tNormal, tDebil, x, y, 180);
+        super(estrategia, 15, tNormal, tDebil, x, y, 180);
     }
 
     @Override

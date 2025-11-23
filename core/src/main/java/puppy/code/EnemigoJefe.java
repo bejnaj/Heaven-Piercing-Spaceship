@@ -11,7 +11,7 @@ public class EnemigoJefe extends EnemigoBase {
     private float intervaloSpawn = 3f;
 
     public EnemigoJefe(PantallaJuego juego, FabricaEnemigos fabrica, Texture tNormal, Texture tDebil, int x, int y) {
-        super(new MovimientoEstatico(), 50, tNormal, tDebil, x, y, 300);
+        super(new MovimientoEstatico(), 100, tNormal, tDebil, x, y, 350);
         this.juego = juego;
         this.fabrica = fabrica;
     }
@@ -35,16 +35,22 @@ public class EnemigoJefe extends EnemigoBase {
     }
 
     private void invocarEsbirros() {
-        float spawnX = this.getX() + this.getArea().width / 2;
-        float spawnY = this.getY() - 50;
+        // Calcular el CENTRO exacto del Jefe
+        float centroX = this.getX() + this.getArea().width / 2;
+        float centroY = this.getY() + this.getArea().height / 2;
 
-        // El Jefe delega a la fábrica la creación del esbirro
+        // Ajuste: Restamos la mitad del tamaño aprox de un esbirro (ej. 50)
+        // para que nazcan exactamente centrados
+        float spawnX = centroX - 50;
+        float spawnY = centroY - 50;
+
+        // 1. Esbirro normal (Sale del centro)
         EnemigoBase esbirro = fabrica.crearEnemigoAleatorio(spawnX, spawnY);
         juego.agregarEnemigo(esbirro);
 
-        // Si está en modo furia (débil), invoca ayuda extra
+        // 2. Refuerzo en modo Furia (Vida baja) -> También sale del centro
         if (debil) {
-            EnemigoBase refuerzo = fabrica.crearEnemigoAleatorio(spawnX - 50, spawnY - 20);
+            EnemigoBase refuerzo = fabrica.crearEnemigoAleatorio(spawnX, spawnY);
             juego.agregarEnemigo(refuerzo);
         }
     }
