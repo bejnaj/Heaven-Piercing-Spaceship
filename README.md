@@ -16,7 +16,7 @@ Este juego ha sido desarrollado en Java y puede ejecutarse descomprimiendo el ar
 1. **Descarga y descomprime el** archivo `.zip` en una carpeta de tu elección.
 2. Ejecuta el archivo "SpaceNav2024-1.0.0.jar",
 
-#### En caso de error por java desactualizado seguir con el paso 3:
+#### **En caso de error por java desactualizado seguir con el paso 3:**
 3. Ingresa a este link y continúa con la instalación:
     - "https://download.oracle.com/java/21/archive/jdk-21.0.8_windows-x64_bin.exe"
         
