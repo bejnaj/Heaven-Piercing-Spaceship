@@ -76,7 +76,6 @@ public abstract class EnemigoBase implements Atacable, Actualizable {
         }
     }
 
-    // --- MÉTODOS PUENTE OBLIGATORIOS (Para que NaveBase y checkCollision funcionen) ---
     // Estos métodos sacan la velocidad desde dentro de la estrategia
     public int getXSpeed() {
         if (estrategia instanceof MovimientoRebote) {
