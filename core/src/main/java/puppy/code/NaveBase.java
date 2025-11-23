@@ -140,6 +140,10 @@ public abstract class NaveBase implements Atacable, Actualizable {
             enemigo.setYSpeed(-enemigo.getYSpeed());
 
             vidas--;
+            if (sonidoHerido != null) {
+                long id = sonidoHerido.play(1.0f);
+                sonidoHerido.setPitch(id, 0.5f); // Pitch normal
+            }
             herido = true;
             tiempoHerido = tiempoHeridoMax;
             if (sonidoHerido != null) sonidoHerido.play();
@@ -160,35 +164,40 @@ public abstract class NaveBase implements Atacable, Actualizable {
                 // Recursos comunes
                 Sound sH = juego.getSonidoHerido();
                 Sound sB = juego.getSonidoBala();
-                Texture tBala = juego.getTexturaBalaENormal(); // O usa balas específicas si las cargaste
 
                 NaveBase nueva = null;
 
-                // 1. Fusión con CHICO -> Usa texturas de NaveEChico
+
                 if (enemigo instanceof EnemigoChico) {
                     nueva = new NaveEChico(
                         spr.getX(), spr.getY(),
-                        juego.getTexturaNaveEChico(),      // <--- TEXTURA CORRECTA
-                        juego.getTexturaNaveEChicoDebil(), // <--- TEXTURA CORRECTA
-                        sH, tBala, sB
+                        juego.getTexturaNaveEChico(),
+                        juego.getTexturaNaveEChicoDebil(),
+                        sH,
+                        juego.getTexturaBalaEChico(),
+                        sB
                     );
                 }
-                // 2. Fusión con GRANDE -> Usa texturas de NaveEGrande
+
                 else if (enemigo instanceof EnemigoGrande) {
                     nueva = new NaveEGrande(
                         spr.getX(), spr.getY(),
-                        juego.getTexturaNaveEGrande(),      // <--- TEXTURA CORRECTA
-                        juego.getTexturaNaveEGrandeDebil(), // <--- TEXTURA CORRECTA
-                        sH, tBala, sB
+                        juego.getTexturaNaveEGrande(),
+                        juego.getTexturaNaveEGrandeDebil(),
+                        sH,
+                        juego.getTexturaBalaEGrande(),
+                        sB
                     );
                 }
-                // 3. Fusión con NORMAL -> Usa texturas de NaveENormal
+
                 else if (enemigo instanceof EnemigoNormal) {
                     nueva = new NaveENormal(
                         spr.getX(), spr.getY(),
                         juego.getTexturaNaveENormal(),
                         juego.getTexturaNaveENormalDebil(),
-                        sH, tBala, sB
+                        sH,
+                        juego.getTexturaBalaENormal(),
+                        sB
                     );
                 }
 

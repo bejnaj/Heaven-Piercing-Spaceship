@@ -24,7 +24,6 @@ public class PantallaMenu implements Screen {
 
     @Override
     public void render(float delta) {
-        // Limpia pantalla (el color no importa porque dibujamos la textura)
         ScreenUtils.clear(0, 0, 0, 1);
 
         camera.update();
@@ -52,12 +51,10 @@ public class PantallaMenu implements Screen {
 
     @Override
     public void show() {
-        // para reporudir música de fondo opciones y boton de jugar
     }
 
     @Override
     public void resize(int width, int height) {
-        // Actualizar cámara para el nuevo tamaño y mantener la proyección
         camera.setToOrtho(false, width, height);
     }
 
