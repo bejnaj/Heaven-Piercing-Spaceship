@@ -1,4 +1,4 @@
-<img width="564" height="690" alt="$RSK03HF" src="https://github.com/user-attachments/assets/b3000850-8fbb-4aed-b463-4cc96447edd2" /># Heaven Piercing SpaceShip
+# Heaven Piercing SpaceShip
 
 ## Descripción
 
